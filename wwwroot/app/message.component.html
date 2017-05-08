@@ -1,0 +1,36 @@
+<!--<ul id="messages">
+    <li *ngFor="let message of messages" [ngClass]="{'tagged': message.tagged }">
+        <b>{{message.sender}}: </b> {{message.content}}
+    </li>
+</ul>
+<div class="messenger">
+    <input [(ngModel)]="msgInput" (keyup.enter)="send()"/>
+    <button (click)="send()">Send</button>
+</div>-->
+<div class="container">
+    <div class="row fill">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2>Yet Another Messaging Service</h2>
+            </div>
+            <div class="panel-body" scroll-glue>
+                <div #chat class="container-fluid fill">
+                    <div class="message-block">
+                        <div class="row message-bubble" [ngClass]="{'tagged': message.tagged}" *ngFor="let message of messages">
+                            <div class="text-muted sender">{{message.sender}}</div>
+                            <div class="msg-content">{{message.content}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <div class="input-group">
+                    <input type="text" class="form-control" [(ngModel)]="msgInput" (keyup.enter)="send()">
+                    <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" (click)="send()">Send</button>
+                  </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
