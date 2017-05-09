@@ -1,12 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WebApplication.Models;
-using System.Collections.Generic;
-using Microsoft​.AspNetCore​.Routing;
-using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using Newtonsoft.Json;
@@ -17,25 +12,8 @@ namespace WebApplication
     public class SlaveStartup
     {
         private static Slave slave;
-        public SlaveStartup(IHostingEnvironment env)
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-
-            builder.AddEnvironmentVariables();
-            Configuration = builder.Build();
-        }
-
-        public IConfigurationRoot Configuration { get; set; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // services.AddDbContext<ModelContext>(options =>
-            //     options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-
             services.AddRouting();
         }
 
@@ -49,10 +27,8 @@ namespace WebApplication
         }
     }
 
-
     public class Slave
     {
-
         private UdpClient Server;
         private int port;
 
@@ -69,7 +45,7 @@ namespace WebApplication
         }
 
         private void RelayMessage(Message m)
-        {   
+        {
             var text = JsonConvert.SerializeObject(m, Formatting.Indented);
             var bytes = Encoding.ASCII.GetBytes(text);
             System.Console.WriteLine("SENDING MESSAGE TO ALL SLAVES");
@@ -92,9 +68,12 @@ namespace WebApplication
                 var result = await this.Server.ReceiveAsync();
                 var text = Encoding.ASCII.GetString(result.Buffer);
                 var message = JsonConvert.DeserializeObject<Message>(text);
-                System.Console.WriteLine("RECEIVED MESSAGE FROM ANOTHER SLAVE");
-                System.Console.WriteLine(text);
-                Model.getInstance().NewServerMessage(message);
+                if (message != null)
+                {
+                    System.Console.WriteLine("RECEIVED MESSAGE FROM ANOTHER SLAVE");
+                    System.Console.WriteLine(text);
+                    Model.getInstance().NewServerMessage(message);
+                }
             }
         }
 

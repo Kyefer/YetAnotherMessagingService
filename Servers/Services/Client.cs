@@ -33,7 +33,10 @@ namespace WebApplication
                 var incoming = await this.socket.ReceiveAsync(seg, CancellationToken.None);
 
                 var message = JsonConvert.DeserializeObject<Message>(System.Text.Encoding.ASCII.GetString(seg.Array));
-                Model.getInstance().NewClientMessage(message);
+                if (message != null)
+                {
+                    Model.getInstance().NewClientMessage(message);
+                }
             }
         }
 
