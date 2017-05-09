@@ -1,0 +1,82 @@
+html,
+body,
+.container {
+    height: 100%;
+}
+
+body {
+    background-color: lightgray;
+}
+
+.content {
+    margin: 50px 0px;
+    padding: 20px;
+    border-style: solid;
+    border-color: black;
+    border-radius: 10px;
+}
+
+.message-bubble {
+    padding: 10px 0px 10px 0px;
+}
+
+.message-bubble:nth-child(odd) {
+    background-color: #E0E0E0;
+}
+
+.message-bubble:nth-child(even) {
+    background-color: #F5F5F5;
+}
+
+.message-bubble>* {
+    padding-left: 10px;
+    overflow-x: hidden;
+}
+
+.panel {
+    width: 100%;
+    height: 100%;
+}
+
+.panel-body {
+    padding: 0px;
+    width: 100%;
+    height: -moz-calc(100% - 100px);
+    height: -webkit-calc(100% - 100px);
+    height: calc(100%-100px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #F5F5F5;
+}
+
+.panel-heading {
+    background-color: #3d6da7 !important;
+    color: white !important;
+    height: 50px;
+    padding: 5px;
+}
+
+.fill {
+    min-height: 100%;
+    height: 100%;
+}
+
+.panel-footer {
+    height: 50px;
+}
+
+.sender {}
+
+.msg-content {}
+
+.message-block {
+    width: 100%;
+    min-width: 100%;
+    max-height: 100%;
+    position: absolute;
+    bottom: 0;
+}
+
+.tagged {
+    background-color: lightsalmon !important;
+}

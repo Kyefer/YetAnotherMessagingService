@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WebApplication.Models;
+using Microsoft.Extensions.Options;
 
 
 namespace WebApplication
@@ -28,14 +29,14 @@ namespace WebApplication
             Configuration = builder.Build();
         }
 
-        public IConfigurationRoot Configuration { get; }
+        public IConfigurationRoot Configuration { get; set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            services.AddDbContext<ModelContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            // services.AddDbContext<ModelContext>(options =>
+            //     options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddMvc();
         }
@@ -58,11 +59,8 @@ namespace WebApplication
 
             app.UseStaticFiles();
 
-
-            // Used for mapping / to /index.html
-            
             app.Map("/ws", Client.Map);
-
+            app.Map("/server", Server.Map);
             
         }
     }
