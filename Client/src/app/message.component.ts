@@ -1,34 +1,32 @@
 import { Component, ElementRef, OnInit, OnDestroy, Directive } from '@angular/core';
 import { SocketService } from './socket.service'
 import { Message } from "./Message"
-import { Event } from "./Event"
 
 @Component({
-  selector: 'message',
+  selector: 'root',
   templateUrl: './message.component.html',
 })
 export class MessageComponent implements OnInit, OnDestroy {
 
   public messages: Array<Message>
   public msgInput: string;
+  public username: string;
 
   public constructor(private socket: SocketService) {
     this.messages = []
   }
 
   public ngOnInit() {
+    
     this.socket.setNewMessageListener((message: Message) => {
-      if (message.tagged){
+      if (new RegExp(".*@" + this.username + + "(\\s|$)").test(this.username)){
+        message.tagged = true;
         var audio = new Audio("notification.wav")
         audio.load();
         audio.play();
       }
       this.messages.push(message);
     });
-    this.socket.setAllMessagesCallback((messages: Message[]) => {
-      this.messages = this.messages.concat(messages);
-    })
-    this.socket.getAllMessages();
   }
 
   public ngOnDestroy() {
@@ -36,9 +34,9 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   public send() {
-    if (this.msgInput) {
-      var msg = new Message(this.msgInput);
-      this.socket.sendMessage(msg);
+    if (this.msgInput && this.username) {
+      var msg = new Message(this.username, this.msgInput);
+      this.socket.send(msg);
       this.msgInput = "";
     }
   }

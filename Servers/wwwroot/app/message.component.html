@@ -25,7 +25,8 @@
             </div>
             <div class="panel-footer">
                 <div class="input-group">
-                    <input type="text" class="form-control" [(ngModel)]="msgInput" (keyup.enter)="send()">
+                    <input type="text" class="username" [(ngModel)]="username" placeholder="Username">
+                    <input type="text" class="form-control" [(ngModel)]="msgInput" (keyup.enter)="send()" placeholder="Type a message">
                     <span class="input-group-btn">
                     <button class="btn btn-default" type="button" (click)="send()">Send</button>
                   </span>

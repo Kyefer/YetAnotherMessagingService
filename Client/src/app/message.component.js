@@ -19,25 +19,22 @@ var MessageComponent = (function () {
     MessageComponent.prototype.ngOnInit = function () {
         var _this = this;
         this.socket.setNewMessageListener(function (message) {
-            if (message.tagged) {
+            if (new RegExp(".*@" + _this.username + +"(\\s|$)").test(_this.username)) {
+                message.tagged = true;
                 var audio = new Audio("notification.wav");
                 audio.load();
                 audio.play();
             }
             _this.messages.push(message);
         });
-        this.socket.setAllMessagesCallback(function (messages) {
-            _this.messages = _this.messages.concat(messages);
-        });
-        this.socket.getAllMessages();
     };
     MessageComponent.prototype.ngOnDestroy = function () {
         this.socket.close();
     };
     MessageComponent.prototype.send = function () {
-        if (this.msgInput) {
-            var msg = new Message_1.Message(this.msgInput);
-            this.socket.sendMessage(msg);
+        if (this.msgInput && this.username) {
+            var msg = new Message_1.Message(this.username, this.msgInput);
+            this.socket.send(msg);
             this.msgInput = "";
         }
     };
@@ -45,7 +42,7 @@ var MessageComponent = (function () {
 }());
 MessageComponent = __decorate([
     core_1.Component({
-        selector: 'message',
+        selector: 'root',
         templateUrl: './message.component.html',
     }),
     __metadata("design:paramtypes", [socket_service_1.SocketService])

@@ -1,6 +1,7 @@
 "use strict";
 var Message = (function () {
-    function Message(content) {
+    function Message(sender, content) {
+        this.sender = sender;
         this.content = content;
     }
     return Message;

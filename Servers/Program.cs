@@ -1,73 +1,68 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using System.Net.Sockets;
+using System.Text.RegularExpressions;
 
 namespace WebApplication
 {
     public class Program
     {
 
-        public static List<int> ServerPorts;
+        public static List<int> SlavePorts= new List<int>();
+        public static int Port;
         public static void Main(string[] args)
         {
-            string type = args[0] = args[0].ToLower();
-            var config = new Configuration("servers.conf");
-            ServerPorts = config.ServerPorts;
+
+            if (args.Length <= 1)
+            {
+                PrintUsage();
+                return;
+            }
+            var type = args[0];
+            if (args.Length == 1 || !Regex.IsMatch(args[1], "\\d+"))
+            {
+                PrintUsage();
+                return;
+            }
+
+            Port = Int32.Parse(args[1]);
+
+            for (int i = 2; i < args.Length; i++)
+            {
+                if (Regex.IsMatch(args[i], "\\d+"))
+                    SlavePorts.Add(Int32.Parse(args[i]));
+            }
+            var host = new WebHostBuilder()
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseIISIntegration()
+                .UseUrls("http://localhost:" + Port);
 
             if (type == "proxy")
             {
-                Console.WriteLine("Running proxy server on port {0}", config.ProxyPort);
-                Console.WriteLine("Starting servers...");
-                Parallel.ForEach(config.ServerPorts, port =>
-                {
-                    System.Console.WriteLine("Starting new slave on port {0}", port);
-                    startSlave(port);
-                });
-                System.Console.WriteLine("Finished starting slaves");
-
-                var host = new WebHostBuilder()
-                    .UseKestrel()
-                    .UseContentRoot(Directory.GetCurrentDirectory())
-                    .UseIISIntegration()
-                    .UseStartup<ProxyStartup>()
-                    .UseUrls("http://localhost:" + config.ProxyPort)
-                    .Build();
-
-                host.Run();
+                host.UseStartup<ProxyStartup>();
             }
             else if (type == "slave")
             {
-                int port = Int32.Parse(args[1]);
-                var host = new WebHostBuilder()
-                    .UseKestrel()
-                    .UseIISIntegration()
-                    .UseStartup<ProxyStartup>()
-                    .UseUrls("http://localhost:" + port)
-                    .Build();
-                startUdp(port);
-                host.Run();
+                host.UseStartup<SlaveStartup>();
             }
             else
             {
-                System.Console.WriteLine("Unknown server type");
+                PrintUsage();
+                return;
             }
 
+            host.Build().Run();
         }
 
-        private static void startSlave(int port)
+        private static void PrintUsage()
         {
+            System.Console.WriteLine("To run the proxy server:");
+            System.Console.WriteLine("dotnet run proxy <port> <slave port> <slave port> ...");
+            System.Console.WriteLine("To run a slave server:");
+            System.Console.WriteLine("dotnet run slave <port>");
 
-        }
-
-        private static async void startUdp(int port)
-        {
-            await new Slave(port).WaitForMessages();
-            
         }
     }
 }

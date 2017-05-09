@@ -1,14 +1,18 @@
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft​.AspNetCore​.Routing;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 using WebApplication.Models;
-using System.Collections.Generic;
-using Microsoft​.AspNetCore​.Routing;
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
 
 
 namespace WebApplication
@@ -21,11 +25,6 @@ namespace WebApplication
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-            if (env.IsDevelopment())
-            {
-                // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets();
-            }
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
@@ -36,56 +35,38 @@ namespace WebApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
-            services.AddDbContext<ModelContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-
-            services.AddMvc();
+            // services.AddDbContext<ModelContext>(options =>
+            //     options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddRouting();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
-                app.UseBrowserLink();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
 
             app.UseStaticFiles();
-
-            app.Map("/ws", Client.Map);
-
-            // var selector = new SlaveSelector(new List<int>(Program.ServerPorts));
 
             var routeBuilder = new RouteBuilder(app);
             routeBuilder.MapGet("slave", SlaveSelector.getSlavePort);
 
             app.UseRouter(routeBuilder.Build());
+        }
+
+        public class SlaveSelector
+        {
+            private static int last = -1;
+
+            public static Task getSlavePort(HttpContext context)
+            {
+                int next = (last + 1) % Program.SlavePorts.Count;
+                last = next;
+                System.Console.WriteLine("Client connecting to slave on port {0}", Program.SlavePorts[next]);
+                return context.Response.WriteAsync(Program.SlavePorts[next] + "");
+            }
 
 
         }
     }
 
-    public class SlaveSelector
-    {
-        private static int last = 0;
 
-        public static Task getSlavePort(HttpContext context){
-            int next = (last + 1) % Program.ServerPorts.Count;
-            last = next;
-            return context.Response.WriteAsync(Program.ServerPorts[next] + "");
-        }
-
-
-    }
 }

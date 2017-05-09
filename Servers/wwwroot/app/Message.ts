@@ -4,7 +4,8 @@ export class Message {
     tagged: boolean;
 
     
-    public constructor(content: string){
+    public constructor(sender: string, content: string){
+        this.sender = sender;
         this.content = content;
     }
 }

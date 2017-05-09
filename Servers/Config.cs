@@ -44,4 +44,10 @@ namespace WebApplication
 
         }
     }
+
+    public class ServerOptions
+    {
+        public int ProxyPort { get; set; }
+        public List<int> ServerPorts { get; set; }
+    }
 }
