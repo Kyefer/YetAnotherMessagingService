@@ -9,12 +9,12 @@ namespace WebApplication
     {
 
         public int ProxyPort { get; private set; }
-        public HashSet<int> ServerPorts { get; private set; }
+        public List<int> ServerPorts { get; private set; }
 
         public Configuration(string configPath)
         {
             this.ProxyPort = 0;
-            this.ServerPorts = new HashSet<int>();
+            this.ServerPorts = new List<int>();
 
             var lines = File.ReadAllLines(configPath);
 

@@ -5,20 +5,22 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WebApplication.Models;
-using Microsoft.Extensions.Options;
+using System.Collections.Generic;
+using Microsoft​.AspNetCore​.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 
 namespace WebApplication
 {
-    public class Startup
+    public class ProxyStartup
     {
-        public Startup(IHostingEnvironment env)
+        public ProxyStartup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-
             if (env.IsDevelopment())
             {
                 // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
@@ -35,10 +37,12 @@ namespace WebApplication
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            // services.AddDbContext<ModelContext>(options =>
-            //     options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ModelContext>(options =>
+                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddMvc();
+
+            services.AddRouting();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -60,8 +64,28 @@ namespace WebApplication
             app.UseStaticFiles();
 
             app.Map("/ws", Client.Map);
-            app.Map("/server", Server.Map);
-            
+
+            // var selector = new SlaveSelector(new List<int>(Program.ServerPorts));
+
+            var routeBuilder = new RouteBuilder(app);
+            routeBuilder.MapGet("slave", SlaveSelector.getSlavePort);
+
+            app.UseRouter(routeBuilder.Build());
+
+
         }
+    }
+
+    public class SlaveSelector
+    {
+        private static int last = 0;
+
+        public static Task getSlavePort(HttpContext context){
+            int next = (last + 1) % Program.ServerPorts.Count;
+            last = next;
+            return context.Response.WriteAsync(Program.ServerPorts[next] + "");
+        }
+
+
     }
 }

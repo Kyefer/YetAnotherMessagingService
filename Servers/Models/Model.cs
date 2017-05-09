@@ -20,13 +20,16 @@ namespace WebApplication.Models
         }
     }
 
+
     public class Model
     {
         private static Model instance;
 
         public delegate void MessageHandler(Message m);
 
-        public event MessageHandler MessageChange;
+        public event MessageHandler NewClientMessageChange;
+
+        public event MessageHandler SendToAllServersChange;
 
         private Model()
         {
@@ -40,9 +43,15 @@ namespace WebApplication.Models
             return instance;
         }
 
-        public void AddMessage(Message m)
+        public void NewClientMessage(Message m)
         {
-            MessageChange?.Invoke(m);
+            NewClientMessageChange?.Invoke(m);
+            SendToAllServersChange?.Invoke(m);
+        }
+
+        public void NewServerMessage(Message m)
+        {
+            NewClientMessageChange?.Invoke(m);
         }
 
     }

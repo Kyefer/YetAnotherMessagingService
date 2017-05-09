@@ -25,7 +25,7 @@ namespace WebApplication
         Client(WebSocket socket)
         {
             this.socket = socket;
-            Model.getInstance().MessageChange += RelayMessage;
+            Model.getInstance().NewClientMessageChange += RelayMessage;
         }
 
         private async Task WaitForMessages()
@@ -71,9 +71,9 @@ namespace WebApplication
         {
             m.sender = this.connectedUser;
             m.timestamp = DateTime.Now.Ticks;
-            db.Add(m);
-            db.SaveChanges();
-            Model.getInstance().AddMessage(m);
+            // db.Add(m);
+            // db.SaveChanges();
+            Model.getInstance().NewClientMessage(m);
         }
 
         private void RelayMessage(Message m)
