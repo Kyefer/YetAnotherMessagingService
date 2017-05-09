@@ -52,7 +52,7 @@ body {
 .panel-heading {
   background-color: #3d6da7 !important;
   color: white !important;
-  height: 50px;
+  min-height: 50px;
   padding: 5px;
 }
 
@@ -67,6 +67,7 @@ body {
 
 .username {
   padding: .5rem .75rem;
+  max-width: 25%;
 }
 
 .message-block {
