@@ -19,7 +19,9 @@ export class MessageComponent implements OnInit, OnDestroy {
   public ngOnInit() {
     
     this.socket.setNewMessageListener((message: Message) => {
-      if (new RegExp(".*@" + this.username + + "(\\s|$)").test(this.username)){
+      var tagged = new RegExp(".*@" + this.username + "(\\s.*|$)")
+      if (tagged.test(message.content)){
+        console.log("Tagged")
         message.tagged = true;
         var audio = new Audio("notification.wav")
         audio.load();

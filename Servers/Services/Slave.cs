@@ -1,85 +1,86 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using WebApplication.Models;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using Newtonsoft.Json;
-using System.Text;
+using System.Net;
+using System.IO;
+using System;
 
 namespace WebApplication
 {
     public class SlaveStartup
     {
-        private static Slave slave;
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRouting();
         }
 
-        public async void Configure(IApplicationBuilder app, IApplicationLifetime applicationLifetime)
+        public void Configure(IApplicationBuilder app, IApplicationLifetime applicationLifetime)
         {
             app.Map("/ws", Client.Map);
 
-            slave = new Slave(Program.Port);
-            await slave.Start();
-            applicationLifetime.ApplicationStopping.Register(slave.Close);
+            var routeBuilder = new RouteBuilder(app);
+            routeBuilder.MapPost("msg", Slave.ReceiveMessage);
+
+            app.UseRouter(routeBuilder.Build());
+
+            Model.getInstance().SendToAllServersChange += Slave.RelayMessage;
+
+            // slave = new Slave(Program.Port);
+            // await slave.Start();
+            // applicationLifetime.ApplicationStopping.Register(slave.Close);
         }
     }
 
     public class Slave
     {
-        private UdpClient Server;
-        private int port;
 
-        public Slave(int port)
+        public static async Task ReceiveMessage(HttpContext context)
         {
-            this.port = port;
-        }
-
-        public async Task Start()
-        {
-            this.Server = new UdpClient(port);
-            Model.getInstance().SendToAllServersChange += RelayMessage;
-            await this.WaitForMessages();
-        }
-
-        private void RelayMessage(Message m)
-        {
-            var text = JsonConvert.SerializeObject(m, Formatting.Indented);
-            var bytes = Encoding.ASCII.GetBytes(text);
-            System.Console.WriteLine("SENDING MESSAGE TO ALL SLAVES");
-            System.Console.WriteLine(text);
-            Parallel.ForEach(Program.SlavePorts, p =>
+            var reader = new StreamReader(context.Request.Body);
+            var text = await reader.ReadToEndAsync();
+            var msg = JsonConvert.DeserializeObject<Message>(text);
+            reader.Dispose();
+            if (msg != null)
             {
-                if (this.port != p)
-                {
-                    System.Console.WriteLine("SENDING MESSAGE TO SLAVE AT PORT " + p);
-                    this.Server.SendAsync(bytes, bytes.Length, "localhost", p);
-                }
-
-            });
-        }
-
-        public async Task WaitForMessages()
-        {
-            while (true)
-            {
-                var result = await this.Server.ReceiveAsync();
-                var text = Encoding.ASCII.GetString(result.Buffer);
-                var message = JsonConvert.DeserializeObject<Message>(text);
-                if (message != null)
-                {
-                    System.Console.WriteLine("RECEIVED MESSAGE FROM ANOTHER SLAVE");
-                    System.Console.WriteLine(text);
-                    Model.getInstance().NewServerMessage(message);
-                }
+                Console.WriteLine("RECEIVED MESSAGE FROM ANOTHER SLAVE");
+                Console.WriteLine(text);
+                Model.getInstance().NewServerMessage(msg);
             }
         }
 
-        public void Close()
+        public static void RelayMessage(Message m)
         {
-            this.Server.Dispose();
+            var text = JsonConvert.SerializeObject(m, Formatting.Indented);
+            System.Console.WriteLine("SENDING MESSAGE TO ALL SLAVES");
+            System.Console.WriteLine(text);
+            Parallel.ForEach(Program.SlavePorts, async p =>
+            {
+                if (Program.Port != p)
+                {
+                    try
+                    {
+                        var request = WebRequest.Create("http://localhost:" + p + "/msg");
+
+                        System.Console.WriteLine("SENDING MESSAGE TO SLAVE AT PORT " + p);
+                        request.Method = "POST";
+                        var writer = new StreamWriter(await request.GetRequestStreamAsync());
+                        writer.Write(text);
+                        writer.Flush();
+                        await request.GetResponseAsync();
+                        writer.Dispose();
+                    } catch
+                    {
+                        System.Console.WriteLine("UNABLE TO REACH SERVER AT PORT {0}", p);
+                    }
+                }
+
+            });
         }
     }
 }

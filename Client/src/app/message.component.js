@@ -19,7 +19,9 @@ var MessageComponent = (function () {
     MessageComponent.prototype.ngOnInit = function () {
         var _this = this;
         this.socket.setNewMessageListener(function (message) {
-            if (new RegExp(".*@" + _this.username + +"(\\s|$)").test(_this.username)) {
+            var tagged = new RegExp(".*@" + _this.username + "(\\s.*|$)");
+            if (tagged.test(message.content)) {
+                console.log("Tagged");
                 message.tagged = true;
                 var audio = new Audio("notification.wav");
                 audio.load();

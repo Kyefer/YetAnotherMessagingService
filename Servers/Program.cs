@@ -61,7 +61,7 @@ namespace WebApplication
             System.Console.WriteLine("To run the proxy server:");
             System.Console.WriteLine("dotnet run proxy <port> <slave port> <slave port> ...");
             System.Console.WriteLine("To run a slave server:");
-            System.Console.WriteLine("dotnet run slave <port>");
+            System.Console.WriteLine("dotnet run slave <port> <other slave port> <other slave port> ... ");
 
         }
     }
