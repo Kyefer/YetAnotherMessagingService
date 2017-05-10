@@ -24,9 +24,15 @@ namespace WebApplication
             app.UseStaticFiles();
 
             var routeBuilder = new RouteBuilder(app);
+            routeBuilder.MapGet("", Index);
             routeBuilder.MapGet("slave", SlaveSelector.getSlavePort);
 
             app.UseRouter(routeBuilder.Build());
+        }
+
+        private async Task Index(HttpContext context)
+        {
+            context.Response.Redirect("index.html");
         }
 
         public class SlaveSelector
